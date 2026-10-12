@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>DiamondHub — Softball Team Hub</title>
+<meta name="description" content="DiamondHub: the softball team hub with live scoring, stats, schedules, messaging and more.">
+<link rel="stylesheet" href="styles.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Bebas+Neue&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥎</text></svg>">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b1b33">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DiamondHub">
+</head>
+<body>
+
+<!-- TOP HEADER -->
+<header class="app-header">
+  <div class="header-inner">
+    <div class="logo" onclick="showView('home')">🥎<span>DiamondHub</span></div>
+    <button class="team-btn" id="teamBtn"><span id="teamBtnLabel"></span><span class="caret">▾</span></button>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="toggleSearchRow()" title="Search">🔍</button>
+      <button class="icon-btn" onclick="quickAddMenu()" title="Quick add">＋</button>
+      <button class="icon-btn" id="notifBtn" onclick="toggleNotifications()" title="Notifications">🔔<span class="notif-count" id="notifCount">4</span></button>
+      <div class="avatar" title="Coach Miller">C</div>
+    </div>
+  </div>
+  <div class="search-row hidden" id="searchRow">
+    <input id="globalSearch" placeholder="Search players, games, events…" oninput="globalSearch(this.value)">
+    <div id="searchResults" class="search-results hidden"></div>
+  </div>
+  <div id="teamDropdown" class="team-dropdown hidden">
+    <div id="teamDropdownList"></div>
+    <button class="btn-outline" style="width:100%;margin-top:8px" onclick="document.querySelector('#teamDropdown').classList.add('hidden');openModal('teamModal')">+ New Team</button>
+  </div>
+  <div id="notifPanel" class="notif-panel hidden"></div>
+  <div id="quickMenu" class="quick-menu hidden">
+    <button onclick="openModal('eventModal')">📅 New Event</button>
+    <button onclick="openModal('playerModal')">👤 Add Player</button>
+    <button onclick="goLive()">🔴 Start Live Game</button>
+    <button onclick="openModal('messageModal')">💬 Announce</button>
+  </div>
+</header>
+
+<!-- ESPN-STYLE SCORE STRIP -->
+<div class="score-strip" id="scoreStrip"></div>
+
+<!-- CONTEXT SUB-BAR (back button / pills for nested views) -->
+<div class="subbar hidden" id="subbar"></div>
+
+<main class="content" id="content">
+  <section id="view-home" class="view active"></section>
+  <section id="view-live" class="view"></section>
+  <section id="view-schedule" class="view"></section>
+  <section id="view-stats" class="view"></section>
+  <section id="view-roster" class="view"></section>
+  <section id="view-lineup" class="view"></section>
+  <section id="view-more" class="view"></section>
+  <section id="view-messages" class="view"></section>
+  <section id="view-duties" class="view"></section>
+  <section id="view-dues" class="view"></section>
+  <section id="view-media" class="view"></section>
+  <section id="view-drills" class="view"></section>
+  <section id="view-settings" class="view"></section>
+</main>
+
+<!-- BOTTOM TAB BAR -->
+<nav class="tabbar"><div class="tabbar-inner">
+  <button class="tab-item active" data-view="home"><span class="tab-ico">🏠</span><span class="tab-label">Home</span></button>
+  <button class="tab-item" data-view="live"><span class="tab-ico">📻</span><span class="tab-label">Scores</span><span class="live-dot" id="tabLiveDot" style="display:none"></span></button>
+  <button class="tab-item" data-view="schedule"><span class="tab-ico">📅</span><span class="tab-label">Schedule</span></button>
+  <button class="tab-item" data-view="stats"><span class="tab-ico">📊</span><span class="tab-label">Stats</span></button>
+  <button class="tab-item" data-view="roster"><span class="tab-ico">👥</span><span class="tab-label">Team</span></button>
+  <button class="tab-item" data-view="more"><span class="tab-ico">☰</span><span class="tab-label">More</span><span class="badge" id="moreBadge">3</span></button>
+</div></nav>
+
+<!-- MODALS -->
+<div class="modal-overlay hidden" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal hidden" id="teamModal">
+    <h2>➕ New Team</h2>
+    <p class="muted">Host unlimited teams — varsity, JV, travel, rec. Each gets its own roster, schedule, stats & feed.</p>
+    <div class="form-grid">
+      <label>Team name<input id="nt-name" placeholder="Escanaba Eskymos 14U"></label>
+      <label>Age group / division<input id="nt-age" placeholder="14U • Travel"></label>
+      <label>Season<input id="nt-season" placeholder="Fall 2026"></label>
+      <label>Team color<input type="color" id="nt-color" value="#16a34a"></label>
+      <label>Emoji logo<input id="nt-emoji" placeholder="🥎" maxlength="4"></label>
+      <label style="grid-column:1/-1">GameChanger team name (for stream links)<input id="nt-gc" placeholder="e.g. Escanaba Eskymos 14U"></label>
+    </div>
+    <div class="modal-actions"><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="createTeam()">Create Team</button></div>
+  </div>
+
+  <div class="modal hidden" id="playerModal">
+    <h2>👤 Add Player</h2>
+    <div class="form-grid">
+      <label>First name<input id="np-first" placeholder="Ava"></label>
+      <label>Last name<input id="np-last" placeholder="Johnson"></label>
+      <label>Jersey #<input id="np-num" type="number" placeholder="7"></label>
+      <label>Primary position<select id="np-pos"><option>P</option><option>C</option><option>1B</option><option>2B</option><option>3B</option><option>SS</option><option>LF</option><option>CF</option><option>RF</option><option>UT</option><option>DP/FLEX</option></select></label>
+      <label>Bats<select id="np-bats"><option>R</option><option>L</option><option>S</option></select></label>
+      <label>Throws<select id="np-throws"><option>R</option><option>L</option></select></label>
+      <label>Parent / guardian<input id="np-parent" placeholder="Sarah Johnson"></label>
+      <label>Parent email<input id="np-email" type="email" placeholder="parent@email.com"></label>
+      <label>Parent phone<input id="np-phone" placeholder="(906) 555-0100"></label>
+    </div>
+    <div class="modal-actions"><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="createPlayer()">Add Player</button></div>
+  </div>
+
+  <div class="modal hidden" id="eventModal">
+    <h2>📅 New Event</h2>
+    <div class="form-grid">
+      <label style="grid-column:1/-1">Title<input id="ne-title" placeholder="Game vs Marquette • Practice • Fundraiser…"></label>
+      <label>Type<select id="ne-type"><option>Game</option><option>Practice</option><option>Tournament</option><option>Fundraiser</option><option>Team Party</option><option>Other</option></select></label>
+      <label>Opponent (if game)<input id="ne-opp" placeholder="Marquette Redettes"></label>
+      <label>Date<input id="ne-date" type="date"></label>
+      <label>Time<input id="ne-time" type="time" value="18:00"></label>
+      <label>Location<input id="ne-loc" placeholder="Ludington Park Field 2"></label>
+      <label>Uniform<select id="ne-uni"><option>Home White</option><option>Away Green</option><option>Practice Tee</option></select></label>
+      <label style="grid-column:1/-1">Notes<textarea id="ne-notes" rows="2" placeholder="Arrive 45 min early, bring…"></textarea></label>
+      <label class="check"><input type="checkbox" id="ne-rsvp" checked> Require RSVP</label>
+      <label class="check"><input type="checkbox" id="ne-remind" checked> Auto-remind parents 24h before</label>
+    </div>
+    <div class="modal-actions"><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="createEvent()">Create & Invite Team</button></div>
+  </div>
+
+  <div class="modal hidden" id="statModal">
+    <h2>📝 Log Stats — <span id="statPlayerName"></span></h2>
+    <p class="muted">Quick-entry for a game. Totals update instantly across leaderboards & player cards.</p>
+    <h4>Batting</h4>
+    <div class="form-grid small">
+      <label>AB<input type="number" id="st-ab" value="0" min="0"></label>
+      <label>H<input type="number" id="st-h" value="0" min="0"></label>
+      <label>2B<input type="number" id="st-2b" value="0" min="0"></label>
+      <label>3B<input type="number" id="st-3b" value="0" min="0"></label>
+      <label>HR<input type="number" id="st-hr" value="0" min="0"></label>
+      <label>RBI<input type="number" id="st-rbi" value="0" min="0"></label>
+      <label>R<input type="number" id="st-r" value="0" min="0"></label>
+      <label>BB<input type="number" id="st-bb" value="0" min="0"></label>
+      <label>K<input type="number" id="st-k" value="0" min="0"></label>
+      <label>SB<input type="number" id="st-sb" value="0" min="0"></label>
+    </div>
+    <h4>Pitching</h4>
+    <div class="form-grid small">
+      <label>IP<input type="number" id="st-ip" value="0" min="0" step="0.1"></label>
+      <label>ER<input type="number" id="st-er" value="0" min="0"></label>
+      <label>K<input type="number" id="st-pk" value="0" min="0"></label>
+      <label>BB<input type="number" id="st-pbb" value="0" min="0"></label>
+    </div>
+    <div class="modal-actions"><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveStats()">Save Stats</button></div>
+  </div>
+
+  <div class="modal hidden" id="messageModal">
+    <h2>📣 New Announcement</h2>
+    <label>Message<textarea id="nm-text" rows="4" placeholder="Practice moved to 5:30pm at Field 1…"></textarea></label>
+    <label class="check"><input type="checkbox" id="nm-pin"> Pin to top</label>
+    <label class="check"><input type="checkbox" id="nm-push" checked> Notify all parents</label>
+    <div class="modal-actions"><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="sendAnnouncement()">Send to Team</button></div>
+  </div>
+
+  <div class="modal hidden" id="gameModal">
+    <h2>🔴 Start Live Game</h2>
+    <div class="form-grid">
+      <label>Opponent<input id="ng-opp" placeholder="Marquette Redettes"></label>
+      <label>Location<input id="ng-loc" placeholder="Ludington Park Field 2"></label>
+      <label>We are<select id="ng-home"><option value="home">Home</option><option value="away">Away</option></select></label>
+      <label>Innings<select id="ng-inn"><option>7</option><option>5</option><option>9</option></select></label>
+    </div>
+    <div class="modal-actions"><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-live" onclick="startLiveGame()">▶ Start Scoring</button></div>
+  </div>
+
+  <div class="modal wide hidden" id="playerDetailModal"><div id="playerDetailBody"></div><div class="modal-actions"><button class="btn-secondary" onclick="closeModal()">Close</button></div></div>
+
+  <div class="modal wide hidden" id="gcModal">
+    <h2>🔗 GameChanger Link</h2>
+    <p class="muted">Already scoring this game in GameChanger? Save the stream link here so families can jump straight to it — or paste the play-by-play to keep a copy in the DiamondHub feed.</p>
+    <label>GameChanger team / stream URL<input id="gc-url" placeholder="https://www.gamechanger.io/t/… or team name"></label>
+    <label>Or paste play-by-play text<textarea id="gc-text" rows="5" placeholder="Top 3rd — Ava J. singles to left, runners on 1st and 2nd…"></textarea></label>
+    <div class="modal-actions"><button class="btn-secondary" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="importGCFeed()">Save to Feed</button></div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

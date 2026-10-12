@@ -1,0 +1,11 @@
+{
+  "name": "diamondhub-softball",
+  "version": "1.0.0",
+  "description": "DiamondHub — softball team hub: live scoring, stats, schedules, messaging and more.",
+  "private": true,
+  "scripts": {
+    "start": "python3 -m http.server 8080 --bind 0.0.0.0",
+    "copy:mobile": "mkdir -p www && cp index.html styles.css app.js manifest.webmanifest icon.svg www/ && echo 'www/ ready for Capacitor sync'"
+  },
+  "keywords": ["softball", "team", "sports", "scoring", "pwa", "capacitor"]
+}

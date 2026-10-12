@@ -1,0 +1,8 @@
+{
+  "appId": "com.diamondhub.softball",
+  "appName": "DiamondHub",
+  "webDir": "www",
+  "backgroundColor": "#0b1b33",
+  "android": { "allowMixedContent": true },
+  "ios": { "contentInset": "automatic" }
+}
